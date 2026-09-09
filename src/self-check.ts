@@ -8,7 +8,11 @@ import {
   startOfWeekMonday,
   twoWeekWindow,
 } from "./api/dates.js";
-import type { Lesson } from "./api/schedule.js";
+import {
+  matchesSubgroupFilter,
+  subgroupNumber,
+  type Lesson,
+} from "./api/schedule.js";
 import { lessonFingerprint, toLocalDateTime } from "./calendar/map.js";
 
 function sampleLesson(overrides: Partial<Lesson> = {}): Lesson {
@@ -24,6 +28,7 @@ function sampleLesson(overrides: Partial<Lesson> = {}): Lesson {
     lecturer: "доц., к.н. ВЛАДИМИРОВА Н.В.",
     stream: "Поток(ФИТм-261)",
     group: null,
+    subGroup: null,
     specializationContent: null,
     note: null,
     note_description: null,
@@ -64,6 +69,23 @@ function main() {
   assert.notEqual(a, c);
 
   assert.equal(toLocalDateTime("2026.09.03", "16:50"), "2026-09-03T16:50:00");
+
+  assert.equal(subgroupNumber("ФИТм-261/2"), "2");
+  assert.equal(subgroupNumber("ФИТм-261/1"), "1");
+  assert.equal(subgroupNumber(null), null);
+
+  const lab2 = sampleLesson({ subGroup: "ФИТм-261/2" });
+  const lab1 = sampleLesson({ subGroup: "ФИТм-261/1" });
+  const whole = sampleLesson({ subGroup: null });
+  assert.equal(matchesSubgroupFilter(lab2, null), true);
+  assert.equal(matchesSubgroupFilter(lab2, "2"), true);
+  assert.equal(matchesSubgroupFilter(lab2, "1"), false);
+  assert.equal(matchesSubgroupFilter(lab1, "2"), false);
+  assert.equal(matchesSubgroupFilter(whole, "2"), true);
+  assert.notEqual(
+    lessonFingerprint(lab1),
+    lessonFingerprint(lab2),
+  );
 
   console.log("self-check OK");
 }

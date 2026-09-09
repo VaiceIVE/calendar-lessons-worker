@@ -16,6 +16,8 @@ Syncs [OMGTU rasp](https://rasp.omgtu.ru/) group schedule into Google Calendar v
 
 On startup the worker syncs the next ~182 days. Every 6 hours (configurable via `CRON_SCHEDULE`) it re-validates the current + next week and creates/updates/deletes events as needed.
 
+Optional `SUBGROUP=1` or `SUBGROUP=2` keeps only that half (from names like `ФИТм-261/2`). Whole-group lessons (no subgroup) are always kept. Leave unset to sync both. Event descriptions always include the full subgroup name when present.
+
 ## Scripts
 
 - `npm start` — run worker

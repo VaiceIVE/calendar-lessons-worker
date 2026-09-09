@@ -29,12 +29,13 @@ async function runSync(
     start,
     end,
     label,
+    subgroupFilter: config.subgroup,
   });
 }
 
 async function main() {
   console.log(
-    `edu-scheduler starting (group=${config.groupId}, calendar=${config.googleCalendarId}, tz=${config.timezone}, sa=${config.googleClientEmail})`,
+    `edu-scheduler starting (group=${config.groupId}, calendar=${config.googleCalendarId}, tz=${config.timezone}, sa=${config.googleClientEmail}, subgroup=${config.subgroup ?? "all"})`,
   );
 
   await ensureCalendarSubscribed(calendarClient(), config.googleCalendarId);

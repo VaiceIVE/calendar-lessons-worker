@@ -15,6 +15,7 @@ export function lessonFingerprint(lesson: Lesson): string {
     lesson.lecturer ?? "",
     lesson.stream ?? "",
     lesson.group ?? "",
+    lesson.subGroup ?? "",
     lesson.specializationContent ?? "",
   ];
   return createHash("sha256").update(parts.join("|")).digest("hex").slice(0, 16);
@@ -29,6 +30,7 @@ function descriptionOf(lesson: Lesson): string {
   if (lesson.lecturer) lines.push(`Преподаватель: ${lesson.lecturer}`);
   if (lesson.stream) lines.push(`Поток: ${lesson.stream}`);
   if (lesson.group) lines.push(`Группа: ${lesson.group}`);
+  if (lesson.subGroup) lines.push(`Подгруппа: ${lesson.subGroup}`);
   if (lesson.specializationContent) {
     lines.push(`Специализация: ${lesson.specializationContent}`);
   }

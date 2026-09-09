@@ -73,6 +73,7 @@ export async function syncWindow(opts: {
   start: Date;
   end: Date;
   label: string;
+  subgroupFilter?: string | null;
 }): Promise<SyncStats> {
   const {
     calendar,
@@ -83,13 +84,21 @@ export async function syncWindow(opts: {
     start,
     end,
     label,
+    subgroupFilter = null,
   } = opts;
 
   console.log(
-    `[${label}] sync ${formatRaspDate(start)} → ${formatRaspDate(end)}`,
+    `[${label}] sync ${formatRaspDate(start)} → ${formatRaspDate(end)}${subgroupFilter ? ` subgroup=${subgroupFilter}` : ""}`,
   );
 
-  const lessons = await fetchSchedule(raspBaseUrl, groupId, start, end);
+  const lessons = await fetchSchedule(
+    raspBaseUrl,
+    groupId,
+    start,
+    end,
+    undefined,
+    subgroupFilter,
+  );
   const existing = await listTrackedEvents(calendar, calendarId, start, end);
   const byOid = new Map(existing.map((e) => [e.lessonOid, e]));
 

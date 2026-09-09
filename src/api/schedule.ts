@@ -16,6 +16,8 @@ export interface Lesson {
   lecturer: string | null;
   stream: string | null;
   group: string | null;
+  /** Full name e.g. "ФИТм-261/2"; null = whole-group lesson */
+  subGroup: string | null;
   specializationContent: string | null;
   note: string | null;
   note_description: string | null;
@@ -35,6 +37,43 @@ function isScheduleError(data: unknown): data is ScheduleError {
   );
 }
 
+function resolveSubGroup(raw: Record<string, unknown>): string | null {
+  if (typeof raw.subGroup === "string" && raw.subGroup.trim()) {
+    return raw.subGroup.trim();
+  }
+  const list = raw.listSubGroups;
+  if (Array.isArray(list) && list.length > 0) {
+    const first = list[0] as Record<string, unknown>;
+    if (typeof first?.subgroup === "string" && first.subgroup.trim()) {
+      return first.subgroup.trim();
+    }
+  }
+  return null;
+}
+
+/** Number after `/` in "ФИТм-261/2" → "2"; null if no subgroup. */
+export function subgroupNumber(subGroup: string | null): string | null {
+  if (!subGroup) return null;
+  const i = subGroup.lastIndexOf("/");
+  if (i < 0 || i === subGroup.length - 1) return null;
+  const num = subGroup.slice(i + 1).trim();
+  return num || null;
+}
+
+/**
+ * Keep whole-group lessons always. If filter is set ("1"/"2"), drop other subgroups.
+ * Unset filter → keep everything.
+ */
+export function matchesSubgroupFilter(
+  lesson: Lesson,
+  filter: string | null,
+): boolean {
+  if (!filter) return true;
+  const num = subgroupNumber(lesson.subGroup);
+  if (!num) return true;
+  return num === filter;
+}
+
 function normalizeLesson(raw: Record<string, unknown>): Lesson {
   return {
     lessonOid: Number(raw.lessonOid),
@@ -48,6 +87,7 @@ function normalizeLesson(raw: Record<string, unknown>): Lesson {
     lecturer: (raw.lecturer as string | null) ?? null,
     stream: (raw.stream as string | null) ?? null,
     group: (raw.group as string | null) ?? null,
+    subGroup: resolveSubGroup(raw),
     specializationContent:
       (raw.specializationContent as string | null) ?? null,
     note: (raw.note as string | null) ?? null,
@@ -86,6 +126,7 @@ export async function fetchSchedule(
   start: Date,
   end: Date,
   chunkDays = CHUNK_DAYS,
+  subgroupFilter: string | null = null,
 ): Promise<Lesson[]> {
   const chunks = chunkDateRange(start, end, chunkDays);
   const byOid = new Map<number, Lesson>();
@@ -99,6 +140,7 @@ export async function fetchSchedule(
     );
     for (const lesson of lessons) {
       if (!lesson.lessonOid || lesson.isBan) continue;
+      if (!matchesSubgroupFilter(lesson, subgroupFilter)) continue;
       byOid.set(lesson.lessonOid, lesson);
     }
   }
